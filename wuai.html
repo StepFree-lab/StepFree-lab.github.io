@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>无碍之境，民生之温 - 无障碍设施与AI辅助服务平台</title>
+<style>
+    /* 全局样式重置 */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Roboto, sans-serif;
+    }
+
+    :root {
+        --primary-color: #2E7D32;
+        --secondary-color: #8D6E63;
+        --bg-light: #F5F5F0;
+        --text-dark: #1e2a1e;
+        --text-light: #4a5b4a;
+        --white: #FFFFFF;
+        --shadow: 0 8px 20px rgba(0,0,0,0.05), 0 2px 6px rgba(0,0,0,0.03);
+        --radius: 20px;
+    }
+
+    body {
+        background-color: var(--bg-light);
+        color: var(--text-dark);
+        line-height: 1.5;
+    }
+
+    /* 注册弹窗 */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background: #fff;
+        margin: auto;
+        padding: 30px;
+        width: 90%;
+        max-width: 450px;
+        border-radius: 28px;
+        box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+        position: relative;
+    }
+    .close-modal {
+        position: absolute;
+        right: 22px;
+        top: 18px;
+        font-size: 28px;
+        cursor: pointer;
+        color: #7f8c7a;
+        transition: color 0.2s;
+    }
+    .close-modal:hover { color: var(--primary-color); }
+
+    /* 登录注册页面 */
+    .login-page {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #e9f5e9 0%, #ddebd9 100%);
+    }
+    /* 修改左侧背景样式，让图片完整填充且不被裁剪 */
+.login-left {
+    width: 50%;
+    background: url('images/3.jpg') center 30% / cover no-repeat;  /* 使用 cover 确保填满，位置微调至关键区域 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    padding: 40px;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    /* 确保文字背景半透明，提高可读性 */
+    background-color: rgba(0,0,0,0.3);
+    background-blend-mode: overlay;
+}
+
+/* 调整登录容器，保证左侧有足够高度显示图片 */
+.login-container {
+    width: 90%;
+    max-width: 1200px;
+    height: auto;           /* 改为自动，避免固定高度导致图片区域压缩 */
+    min-height: 600px;      /* 设置最小高度，保证图片显示空间 */
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    overflow: hidden;
+}
+
+/* 响应式适配保持原有逻辑 */
+@media (max-width: 992px) {
+    .login-container {
+        flex-direction: column;
+        min-height: auto;
+    }
+    .login-left, .login-right {
+        width: 100%;
+    }
+    .login-left {
+        min-height: 320px;
+    }
+}
+    .login-left h2 { font-size: 2rem; margin-bottom: 1rem; letter-spacing: 2px; }
+    .login-right {
+        width: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        background: white;
+    }
+    .login-right h2 { font-size: 28px; color: var(--primary-color); margin-bottom: 32px; font-weight: 600; }
+    .form-group { width: 100%; margin-bottom: 24px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-dark); }
+    .form-group input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 12px 18px;
+        border: 1px solid #d0dbce;
+        border-radius: 40px;
+        font-size: 16px;
+        transition: all 0.2s;
+        background: #fefef7;
+    }
+    .form-group input:focus, .form-select:focus, .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(46,125,50,0.1);
+    }
+    .btn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 40px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-primary { background-color: var(--primary-color); color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .btn-primary:hover { background-color: #1b5e20; transform: translateY(-1px); }
+    .btn-secondary { background: transparent; color: var(--primary-color); border: 1.5px solid var(--primary-color); }
+    .btn-secondary:hover { background: #e8f5e9; }
+    .login-tip { margin-top: 24px; color: #6c7a6b; font-size: 14px; text-align: center; }
+
+    /* 主页面布局 */
+    .main-page {
+        display: none;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+    .sidebar {
+        width: 260px;
+        background: var(--white);
+        box-shadow: 2px 0 12px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+        padding: 28px 0 20px;
+        z-index: 10;
+    }
+    .sidebar-logo { padding: 0 24px 24px; border-bottom: 1px solid #ecf3e8; margin-bottom: 20px; }
+    .sidebar-logo h2 { color: var(--primary-color); font-size: 24px; letter-spacing: 1px; }
+    .sidebar-menu { flex: 1; list-style: none; }
+    .sidebar-menu li { margin-bottom: 8px; }
+    .sidebar-menu a {
+        display: block;
+        padding: 12px 28px;
+        color: #2c3e2b;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.2s;
+        border-left: 4px solid transparent;
+    }
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+        background-color: #edf7ea;
+        color: var(--primary-color);
+        border-left-color: var(--primary-color);
+    }
+    .sidebar-footer { padding: 20px; text-align: center; font-size: 12px; color: #9aaa97; border-top: 1px solid #ecf3e8; }
+    .content-area {
+        flex: 1;
+        overflow-y: auto;
+        background: var(--bg-light);
+        padding: 0;
+    }
+
+    /* 首页 */
+    .home-banner {
+        width: 100%;
+        background: linear-gradient(rgba(30,45,25,0.3), rgba(25,40,20,0.4)), url('images/4.jpg') center/cover no-repeat;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 60px 24px;
+        -webkit-font-smoothing: antialiased;
+    }
+    .home-banner h1 { font-size: 52px; color: #FEF9E6; text-shadow: 0 4px 14px rgba(0,0,0,0.5); margin-bottom: 20px; font-weight: 800; line-height: 1.2; }
+    .home-banner h1 span { color: #FFE0A3; display: inline-block; }
+    .home-banner .subtitle { font-size: 22px; color: #FFF5E6; max-width: 800px; margin-bottom: 40px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); font-weight: 500; }
+    .home-banner .quote { background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); padding: 20px 32px; border-radius: 60px; color: #FFF7E8; font-size: 20px; max-width: 800px; border-left: 6px solid #FFD966; font-weight: 500; }
+    .home-intro { max-width: 1280px; margin: 60px auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 32px; padding: 0 32px; }
+    .intro-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(2px); padding: 32px 20px; border-radius: 36px; box-shadow: var(--shadow); text-align: center; transition: all 0.25s; border: 1px solid #e2f0dc; }
+    .intro-card:hover { transform: translateY(-6px); background: white; }
+    .intro-card h3 { color: var(--primary-color); font-size: 24px; margin-bottom: 16px; }
+    .intro-card p { color: #3e4d3a; line-height: 1.6; }
+
+    /* 模块通用 */
+    .module-section { display: none; width: 100%; max-width: 1400px; margin: 0 auto; padding: 40px 32px; }
+    .module-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+    .module-header h2 { font-size: 32px; color: var(--primary-color); font-weight: 700; letter-spacing: -0.3px; }
+    .filter-tags { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; }
+    .filter-tag { padding: 8px 22px; background: white; border: 1px solid #d4e2cf; border-radius: 40px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+    .filter-tag.active, .filter-tag:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+    .cards-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 28px; margin-top: 16px; }
+    .defect-card { background: white; border-radius: 28px; overflow: hidden; box-shadow: var(--shadow); transition: all 0.25s; display: flex; flex-direction: column; }
+    .defect-card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px -12px rgba(0,0,0,0.15); }
+    .card-img { width: 100%; height: 180px; object-fit: cover; background: #cfe3ca; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #2c5e2a; font-weight: 500; background-size: cover; background-position: center; }
+    .card-content { padding: 20px 20px 24px; }
+    .card-tag { display: inline-block; background: #eef5ea; color: #2e6b2f; border-radius: 40px; padding: 4px 14px; font-size: 12px; font-weight: 600; margin-bottom: 12px; }
+    .card-content h3 { font-size: 20px; margin-bottom: 12px; color: #1f3b1a; }
+    .card-content p { color: #4d6049; line-height: 1.5; margin-bottom: 16px; }
+    .card-detail { color: var(--primary-color); font-weight: 600; text-decoration: none; font-size: 14px; cursor: pointer; }
+    .data-overview { background: white; border-radius: 28px; padding: 24px; margin-bottom: 36px; box-shadow: var(--shadow); }
+    .data-chart { display: flex; align-items: flex-end; gap: 28px; justify-content: space-around; padding: 20px 8px; flex-wrap: wrap; }
+    .chart-bar { width: 80px; background: linear-gradient(to top, #2e7d32, #6fbf4c); border-radius: 20px 20px 8px 8px; position: relative; transition: 0.2s; text-align: center; }
+    .chart-bar .value { position: absolute; top: -28px; left: 0; right: 0; font-weight: bold; color: var(--primary-color); }
+    .chart-bar span:last-child { position: absolute; bottom: -30px; left: 0; right: 0; font-size: 12px; color: #4b6045; }
+
+    /* AI助手模块 */
+    .ai-assistant-container { display: flex; flex-direction: column; height: 65vh; background: white; border-radius: 36px; padding: 20px; box-shadow: var(--shadow); }
+    .ai-chat-history { flex: 1; overflow-y: auto; padding: 16px; background: #fafaf5; border-radius: 28px; margin-bottom: 20px; }
+    .chat-message { display: flex; gap: 12px; margin-bottom: 24px; }
+    .chat-message.user { flex-direction: row-reverse; }
+    .chat-avatar { width: 42px; height: 42px; background: var(--primary-color); border-radius: 42px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+    .chat-bubble { max-width: 75%; padding: 12px 20px; border-radius: 28px; font-size: 15px; line-height: 1.5; }
+    .chat-message.ai .chat-bubble { background: #eaf5e6; color: #1e331c; }
+    .chat-message.user .chat-bubble { background: var(--primary-color); color: white; }
+    .ai-input-area { display: flex; gap: 12px; }
+    .ai-input-area input { flex: 1; padding: 14px 20px; border-radius: 48px; border: 1px solid #cbdcc6; font-size: 16px; }
+    .ai-input-area button { padding: 12px 28px; background: var(--primary-color); border: none; border-radius: 48px; color: white; font-weight: 600; cursor: pointer; }
+
+    /* 知识科普tab */
+    .tab-content { margin-top: 24px; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 10001; }
+    .modal-box { background: white; max-width: 620px; width: 90%; border-radius: 40px; overflow: hidden; }
+    .modal-header { background: var(--primary-color); padding: 18px 24px; color: white; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { font-size: 28px; cursor: pointer; line-height: 1; }
+    .modal-body { padding: 28px; line-height: 1.7; color: #2e3a2c; max-height: 60vh; overflow-y: auto; }
+    .modal-footer { padding: 16px 24px; text-align: right; border-top: 1px solid #e2ecd9; }
+
+    @media (max-width: 860px) {
+        .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 12px; gap: 8px; }
+        .sidebar-logo { display: none; }
+        .sidebar-menu { display: flex; flex-direction: row; gap: 4px; }
+        .sidebar-menu a { padding: 8px 18px; border-left: none; border-bottom: 3px solid transparent; border-radius: 30px; }
+        .sidebar-menu a.active { border-bottom-color: var(--primary-color); background: #eef3ea; }
+        .main-page { flex-direction: column; }
+        .home-banner h1 { font-size: 36px; }
+        .module-section { padding: 24px 16px; }
+    }
+    /* 树状图增强样式 */
+.data-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 20px;
+    padding: 20px 10px;
+    flex-wrap: wrap;
+    background: #FAFCF7;
+    border-radius: 28px;
+}
+.chart-item {
+    flex: 1;
+    min-width: 70px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.chart-bar-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+.chart-bar {
+    width: 55px;
+    background: linear-gradient(0deg, #2E7D32, #6fbf4c);
+    border-radius: 12px 12px 6px 6px;
+    transition: height 0.3s ease;
+    position: relative;
+    margin-bottom: 8px;
+}
+.chart-bar .value {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: bold;
+    color: #1b5e20;
+    background: rgba(255,255,240,0.9);
+    padding: 2px 8px;
+    border-radius: 40px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+.chart-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2d4a2c;
+    margin-top: 8px;
+}
+.chart-desc {
+    font-size: 12px;
+    color: #7c9477;
+    margin-top: 4px;
+}
+/* 卡片搜索无结果提示 */
+#noResultMsg {
+    grid-column: 1 / -1;
+}
+</style>
+</head>
+<body>
+<div id="registerModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2 style="color:#2E7D32; margin-bottom:20px;">用户注册</h2>
+        <div class="form-group"><label>用户名</label><input type="text" id="regUser" placeholder="请输入用户名"></div>
+        <div class="form-group"><label>密码</label><input type="password" id="regPwd" placeholder="请输入密码"></div>
+        <button class="btn btn-primary" id="doRegisterBtn">立即注册</button>
+    </div>
+</div>
+
+<div class="login-page" id="loginPage">
+    <div class="login-container">
+        <div class="login-left"><h2></h2><p></p></div>
+        <div class="login-right"><h2>用户登录</h2>
+            <div class="form-group"><label>用户名</label><input type="text" id="username" placeholder="请输入用户名"></div>
+            <div class="form-group"><label>密码</label><input type="password" id="password" placeholder="请输入密码"></div>
+            <button class="btn btn-primary" id="loginBtn">登录</button>
+            <button class="btn btn-secondary" id="registerBtn">注册账号</button>
+            <p class="login-tip">首次使用请注册，登录后体验无障碍服务</p>
+        </div>
+    </div>
+</div>
+
+<div class="main-page" id="mainPage">
+    <aside class="sidebar"><div class="sidebar-logo"><h2>无碍之境</h2></div>
+        <ul class="sidebar-menu"><li><a href="javascript:;" class="nav-item active" data-page="home">首页</a></li>
+            <li><a href="javascript:;" class="nav-item" data-page="defect">设施缺陷展示</a></li>
+            <li><a href="javascript:;" class="nav-item" data-page="feedback">需求反馈</a></li>
+            <li><a href="javascript:;" class="nav-item" data-page="ai">AI智能辅助助手</a></li>
+            <li><a href="javascript:;" class="nav-item" data-page="knowledge">知识科普</a></li>
+        </ul>
+        <div class="sidebar-footer"><p>© 2026 无碍之境 民生之温</p></div>
+    </aside>
+    <main class="content-area">
+        <!-- 首页 -->
+        <div class="page-content" id="homePage">
+            <div class="home-banner"><h1>无碍之境，民生之温<br><span>——无障碍环境建设现状与公众需求调研</span></h1>
+                <p class="subtitle">以青年之眼，察民生之微；用脚步丈量城市温度，为全龄友好发声。</p>
+                <div class="quote">“让每一位老人、残障朋友、推婴儿车的母亲，都能体面出行，尊严生活。”</div>
+            </div>
+            <div class="home-intro"><div class="intro-card"><h3>设施现状展示</h3><p>七大场景高频缺陷，直观展示出行障碍。</p></div>
+                <div class="intro-card"><h3>公众需求收集</h3><p>表达真实诉求，助力无障碍环境优化。</p></div>
+                <div class="intro-card"><h3>AI智能辅助</h3><p>实时出行助手，解决出行难题。</p></div>
+                <div class="intro-card"><h3>无障碍知识科普</h3><p>普及标准与理念，共建包容社会。</p></div>
+            </div>
+        </div>
+
+        <!-- 设施缺陷展示模块 - 完整替换原 #defectPage 内容 -->
+<div class="module-section" id="defectPage">
+    <div class="module-header">
+        <h2>无障碍设施缺陷展示</h2>
+        <div class="search-box">
+            <input type="text" id="defectSearchInput" placeholder="搜索场所/缺陷关键词...">
+            <button id="defectSearchBtn">搜索</button>
+        </div>
+    </div>
+    <div class="filter-tags">
+        <span class="filter-tag active" data-scene="all">全部场景</span>
+        <span class="filter-tag" data-scene="road">城市道路</span>
+        <span class="filter-tag" data-scene="traffic">公共交通</span>
+        <span class="filter-tag" data-scene="mall">商场超市</span>
+        <span class="filter-tag" data-scene="hospital">医院</span>
+        <span class="filter-tag" data-scene="park">公园景区</span>
+        <span class="filter-tag" data-scene="toilet">公共卫生间</span>
+        <span class="filter-tag" data-scene="community">住宅小区</span>
+    </div>
+
+    <!-- 树状图（柱状图）区域 -->
+    <div class="data-overview">
+        <h3>📊 高频缺陷数据概览（树状图）</h3>
+        <div class="data-chart" id="defectChart">
+            <!-- 动态柱状图由js生成，确保每个柱子有比例和标签 -->
+        </div>
+        <p style="text-align: center; color: #6f8f6a; font-size: 13px; margin-top: 20px;">※ 数据基于2025年公众调研与实地走访统计</p>
+    </div>
+
+    <!-- 缺陷卡片容器 -->
+    <div class="cards-container" id="defectCardsContainer"></div>
+    <div id="noResultMsg" style="display: none; text-align: center; padding: 40px; background: white; border-radius: 28px;">🔍 没有找到相关缺陷信息，试试其他关键词吧</div>
+</div>
+
+        <!-- 反馈模块 -->
+        <div class="module-section" id="feedbackPage"><div class="module-header"><h2>公众需求与意见反馈</h2></div>
+            <div class="module-content"><h3>提交您的需求与建议</h3><form class="feedback-form"><div class="form-group"><label>您的身份</label><select class="form-select"><option>视障人士</option><option>听障人士</option><option>行动不便者</option><option>老年人</option><option>普通公众</option></select></div>
+            <div class="form-group"><label>反馈类型</label><select class="form-select"><option>设施缺陷举报</option><option>需求建议</option><option>其他</option></select></div>
+            <div class="form-group"><label>具体描述</label><textarea class="form-textarea" placeholder="请详细描述..."></textarea></div>
+            <div class="form-group"><label>所在城市</label><input type="text" class="form-select" placeholder="城市"></div>
+            <button type="button" class="btn btn-primary" id="submitFeedbackBtn">提交反馈</button></form>
+            <h3 style="margin-top:48px">优质需求公示</h3><div class="cards-container"><div class="defect-card"><div class="card-content"><span class="card-tag">高频需求</span><h3>盲道修复与常态化管理</h3><p>加强日常监管，严治占道。</p></div></div><div class="defect-card"><div class="card-content"><span class="card-tag">迫切需求</span><h3>医院无障碍电梯全覆盖</h3><p>高低按钮+语音提示。</p></div></div></div></div></div>
+
+        <!-- AI助手 -->
+        <div class="module-section" id="aiPage"><div class="module-header"><h2>AI智能辅助助手</h2></div><div class="module-content ai-assistant-container"><div class="ai-chat-history"><div class="chat-message ai"><div class="chat-avatar">AI</div><div class="chat-bubble">您好！我是无障碍出行AI助手，请描述您遇到的出行问题，我会提供实用建议～</div></div></div><div class="ai-input-area"><input type="text" id="aiInput" placeholder="例如：商场盲道被占怎么办？"><button id="sendAiBtn">发送</button><button id="voiceMockBtn" style="background:#66BB6A;">语音输入</button></div></div></div>
+
+        <!-- 知识科普 -->
+        <div class="module-section" id="knowledgePage"><div class="module-header"><h2>无障碍知识科普与普及</h2></div><div class="module-content"><div class="filter-tags" id="knowledgeTags"><span class="filter-tag active" data-tab="knowledge">知识学习</span><span class="filter-tag" data-tab="help">帮扶指南</span><span class="filter-tag" data-tab="policy">政策解读</span><span class="filter-tag" data-tab="mistake">常见误区</span></div>
+        <div class="tab-content"><div class="tab-pane active" id="tab-knowledge"><div class="cards-container"><div class="defect-card"><div class="card-content"><h3>无障碍设施建设国家标准</h3><p>解读GB 50763-2012关键指标</p><a class="card-detail" onclick="openModal('无障碍国标','轮椅坡道1:12，盲道触感条清晰，无障碍电梯语音报层。')">查看详情 →</a></div></div><div class="defect-card"><div class="card-content"><h3>无障碍设施分类与用途</h3><p>通行、服务、信息三大类</p><a class="card-detail" onclick="openModal('分类与用途','盲道、坡道、无障碍卫生间、低位服务台等。')">查看详情 →</a></div></div></div></div>
+        <div class="tab-pane" id="tab-help"><div class="cards-container"><div class="defect-card"><div class="card-content"><h3>视障人士出行帮扶技巧</h3><a class="card-detail" onclick="openModal('视障帮扶','轻问需求，让扶肘部，提前告知障碍，离开时告知。')">查看详情 →</a></div></div><div class="defect-card"><div class="card-content"><h3>轮椅使用者帮扶指南</h3><a class="card-detail" onclick="openModal('轮椅帮扶','询问后推行，上下坡平稳，电梯内面向门。')">查看详情 →</a></div></div></div></div>
+        <div class="tab-pane" id="tab-policy"><div class="cards-container"><div class="defect-card"><div class="card-content"><h3>《无障碍环境建设法》核心条款</h3><a class="card-detail" onclick="openModal('无障碍环境建设法','2023年实施，禁止占用盲道，违者罚款。')">查看详情 →</a></div></div></div></div>
+        <div class="tab-pane" id="tab-mistake"><div class="cards-container"><div class="defect-card"><div class="card-content"><h3>无障碍常见误区纠正</h3><a class="card-detail" onclick="openModal('误区纠正','无障碍设施服务全龄人群，盲道是生命通道。')">查看详情 →</a></div></div></div></div></div>
+        <h3 style="margin-top: 40px;">无障碍知识自测</h3><div id="quiz-questions"></div><button class="btn btn-primary" id="submit-quiz" style="max-width:220px; margin-top:20px;">提交答案</button><div id="quiz-result" style="margin-top:20px;"></div></div></div>
+    </main>
+</div>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal-box"><div class="modal-header"><h3 id="modalTitle"></h3><span class="modal-close" onclick="closeModal()">&times;</span></div><div class="modal-body" id="modalBody"></div><div class="modal-footer"><button class="btn btn-primary" onclick="closeModal()">确定</button></div></div></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 登录注册逻辑
+    const loginPage = document.getElementById('loginPage'), mainPage = document.getElementById('mainPage');
+    const loginBtn = document.getElementById('loginBtn'), registerBtn = document.getElementById('registerBtn');
+    const registerModal = document.getElementById('registerModal'), closeModalBtn = document.querySelector('.close-modal');
+    const doRegister = document.getElementById('doRegisterBtn');
+    if(registerBtn) registerBtn.onclick = () => registerModal.style.display = 'flex';
+    if(closeModalBtn) closeModalBtn.onclick = () => registerModal.style.display = 'none';
+    window.onclick = e => { if(e.target === registerModal) registerModal.style.display = 'none'; };
+    if(doRegister) doRegister.onclick = () => { let u = document.getElementById('regUser').value.trim(), p = document.getElementById('regPwd').value.trim(); if(u&&p){ localStorage.setItem('user',u); localStorage.setItem('pwd',p); alert('注册成功！'); registerModal.style.display='none';} else alert('输入完整'); };
+    if(loginBtn) loginBtn.onclick = () => { let u = document.getElementById('username').value, p = document.getElementById('password').value; let lu = localStorage.getItem('user'), lp = localStorage.getItem('pwd'); if(!lu){ localStorage.setItem('user',u); localStorage.setItem('pwd',p); alert('首次登录已注册'); } if(u === localStorage.getItem('user') && p === localStorage.getItem('pwd')){ loginPage.style.display='none'; mainPage.style.display='flex'; showPage('defect'); } else alert('用户名或密码错误'); };
+    
+    // 核心页面切换修复
+    function showPage(pageId) {
+        const homeDiv = document.getElementById('homePage');
+        const allModules = document.querySelectorAll('.module-section');
+        const navLinks = document.querySelectorAll('.nav-item');
+        if(homeDiv) homeDiv.style.display = 'none';
+        allModules.forEach(mod => mod.style.display = 'none');
+        if(pageId === 'home') {
+            if(homeDiv) homeDiv.style.display = 'block';
+        } else {
+            let target = document.getElementById(pageId + 'Page');
+            if(!target) target = document.getElementById(pageId);
+            if(target) target.style.display = 'block';
+        }
+        navLinks.forEach(link => link.classList.remove('active'));
+        const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+        if(activeNav) activeNav.classList.add('active');
+        if(pageId === 'knowledge' && typeof renderQuiz === 'function') renderQuiz();
+    }
+    window.showPage = showPage;
+    document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', (e) => { showPage(link.dataset.page); }); });
+    
+    // 缺陷筛选（静态卡片重新抓取）
+    const defectCards = Array.from(document.querySelectorAll('#defectPage .defect-card'));
+    const filterTags = document.querySelectorAll('#defectPage .filter-tag[data-scene]');
+    if(filterTags.length) filterTags.forEach(tag => { tag.addEventListener('click', () => { filterTags.forEach(t => t.classList.remove('active')); tag.classList.add('active'); const scene = tag.dataset.scene; defectCards.forEach(card => { if(scene === 'all' || card.dataset.scene === scene) card.style.display = 'flex'; else card.style.display = 'none'; }); }); });
+    
+    // AI豆包API (保持原key)
+    const API_KEY = "980cde45-8ff8-4eba-bf35-846b44e5299a";
+    const chatHistoryDiv = document.querySelector('.ai-chat-history');
+    const aiInput = document.getElementById('aiInput');
+    const sendBtn = document.getElementById('sendAiBtn');
+    async function sendToDoubao(msg) { try { const resp = await fetch("https://ark.cn-beijing.volces.com/api/v3/chat/completions", { method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${API_KEY}`}, body:JSON.stringify({ model:"doubao-seed-2-0-lite-260215", messages:[{ role:"user", content:`你是无障碍出行AI助手，回答简洁实用：${msg}` }], temperature:0.7 }) }); const data = await resp.json(); return data.choices?.[0]?.message?.content || "服务繁忙，稍后再试。"; } catch(e){ return "网络异常，请检查连接。"; } }
+    if(sendBtn && aiInput) sendBtn.onclick = async () => { let txt = aiInput.value.trim(); if(!txt) return; let userMsgDiv = document.createElement('div'); userMsgDiv.className='chat-message user'; userMsgDiv.innerHTML=`<div class="chat-avatar">我</div><div class="chat-bubble">${txt}</div>`; chatHistoryDiv.appendChild(userMsgDiv); aiInput.value=''; chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight; let loading = document.createElement('div'); loading.className='chat-message ai'; loading.innerHTML='<div class="chat-avatar">AI</div><div class="chat-bubble">思考中...</div>'; chatHistoryDiv.appendChild(loading); let reply = await sendToDoubao(txt); chatHistoryDiv.removeChild(loading); let aiMsgDiv = document.createElement('div'); aiMsgDiv.className='chat-message ai'; aiMsgDiv.innerHTML=`<div class="chat-avatar">AI</div><div class="chat-bubble">${reply}</div>`; chatHistoryDiv.appendChild(aiMsgDiv); chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight; };
+    document.getElementById('voiceMockBtn')?.addEventListener('click',()=>{ if(aiInput) aiInput.value = "附近有无障碍卫生间吗？请指引"; sendBtn.click(); });
+    document.getElementById('submitFeedbackBtn')?.addEventListener('click',()=>{ alert('反馈提交成功！感谢您的宝贵意见。'); document.querySelector('.feedback-form')?.reset(); });
+    
+    // 知识科普选项卡
+    const knowTags = document.querySelectorAll('#knowledgeTags .filter-tag');
+    const panes = document.querySelectorAll('.tab-pane');
+    knowTags.forEach(tag => { tag.addEventListener('click', () => { knowTags.forEach(t => t.classList.remove('active')); tag.classList.add('active'); panes.forEach(p => p.classList.remove('active')); const targetPane = document.getElementById(`tab-${tag.dataset.tab}`); if(targetPane) targetPane.classList.add('active'); }); });
+    
+    // 自测题库
+    const quizBank = [{ question:"盲道的主要作用是什么？", options:["装饰城市道路","引导视障人士安全出行","划分非机动车道"], answer:1, analysis:"盲道核心是保障视障人士出行安全。" },{ question:"轮椅坡道的合理坡度最大为多少？", options:["1:8","1:12","1:20"], answer:1, analysis:"国标规定轮椅坡道最大坡度1:12。" },{ question:"无障碍电梯的核心要求不包括？", options:["高低位按钮","语音报层","仅限残疾人使用"], answer:2, analysis:"无障碍电梯是全龄友好设施。" }];
+    function getRandomQuestions(count=2){ let shuffled = [...quizBank].sort(()=>0.5-Math.random()); return shuffled.slice(0,count); }
+    function renderQuiz(){ let container=document.getElementById('quiz-questions'); if(!container) return; let selected=getRandomQuestions(2); window.currentQuiz=selected; container.innerHTML=selected.map((q,i)=>`<div class="form-group"><label>${i+1}. ${q.question}</label><select class="form-select quiz-select" data-index="${i}"><option value="-1">请选择答案</option>${q.options.map((opt,idx)=>`<option value="${idx}">${opt}</option>`).join('')}</select></div>`).join(''); document.getElementById('quiz-result').innerHTML=''; }
+    window.renderQuiz = renderQuiz;
+    document.getElementById('submit-quiz')?.addEventListener('click',()=>{ let selects=document.querySelectorAll('.quiz-select'); if(!window.currentQuiz||!selects.length) return; let correct=0, html=''; let allAns=true; selects.forEach(sel=>{ if(sel.value==='-1') allAns=false; }); if(!allAns){ document.getElementById('quiz-result').innerHTML='<span style="color:#D32F2F;">请完成所有题目</span>'; return; } selects.forEach((sel,idx)=>{ let userVal=parseInt(sel.value); let correctAns=window.currentQuiz[idx].answer; if(userVal===correctAns){ correct++; html+=`<p style="color:#2E7D32;">第${idx+1}题：正确 ✅</p>`; } else{ html+=`<p style="color:#D32F2F;">第${idx+1}题：错误 ❌ 正确答案：${window.currentQuiz[idx].options[correctAns]}</p><p style="color:#666;">解析：${window.currentQuiz[idx].analysis}</p>`; } }); let score=Math.round((correct/selects.length)*100); document.getElementById('quiz-result').innerHTML=`<h4>得分：${score}分 (${correct}/${selects.length})</h4>`+html; setTimeout(()=>renderQuiz(),4000); });
+    renderQuiz();
+    
+    // 模态窗
+    window.openModal = function(title, content) { let mt=document.getElementById('modalTitle'), mb=document.getElementById('modalBody'), mo=document.getElementById('modalOverlay'); if(mt&&mb&&mo){ mt.innerText=title; mb.innerHTML=content; mo.style.display='flex'; } };
+    window.closeModal = function() { let mo=document.getElementById('modalOverlay'); if(mo) mo.style.display='none'; };
+    
+    // 补充所有缺陷卡片（内嵌完整数据，为保证体验动态生成部分卡片？原html卡片众多但为了省篇幅此处确保卡片存在，但原结构已保留但需确保有内容，手动注入部分核心卡片，因原html卡片过多且占篇幅这里用JS动态补全主要场景卡片保证展示）
+    function ensureDefectCards(){ let container = document.getElementById('defectCardsContainer'); if(container && container.children.length===0){ const scenesData = [{scene:"road",title:"盲道被占用中断",desc:"共享单车占道严重"},{scene:"mall",title:"收银台过高",desc:"轮椅无法靠近"},{scene:"park",title:"公园无坡道",desc:"台阶阻挡轮椅"},{scene:"hospital",title:"电梯无低位按钮",desc:"轮椅难操作"}]; scenesData.forEach(d=>{ let card=document.createElement('div'); card.className='defect-card'; card.setAttribute('data-scene',d.scene); card.innerHTML=`<div class="card-img" style="background:#c8e6c9;">📸 实拍图</div><div class="card-content"><span class="card-tag">${d.scene==='road'?'城市道路':d.scene==='mall'?'商场超市':'其他'}</span><h3>${d.title}</h3><p>${d.desc}</p><a class="card-detail">查看详情 →</a></div>`; container.appendChild(card); }); } }
+    ensureDefectCards();
+});
+(function() {
+    // 确保DOM加载完成后执行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDefectModule);
+    } else {
+        initDefectModule();
+    }
+
+    function initDefectModule() {
+        // ---------- 1. 树状图数据 ----------
+        const chartData = [
+            { label: "盲道占用", percent: 65, desc: "共享单车/车辆占压" },
+            { label: "无障碍卫生间缺失", percent: 40, desc: "设施不全或上锁" },
+            { label: "坡道不规范", percent: 35, desc: "过陡/无防滑/无扶手" },
+            { label: "电梯无语音提示", percent: 30, desc: "无盲文按钮/语音" },
+            { label: "标识缺失/模糊", percent: 25, desc: "无盲文/导视不清" }
+        ];
+
+        function renderChart() {
+            const container = document.getElementById('defectChart');
+            if (!container) return;
+            container.innerHTML = '';
+            chartData.forEach(item => {
+                const chartItem = document.createElement('div');
+                chartItem.className = 'chart-item';
+                const barHeight = Math.max(40, (item.percent / 100) * 180); // 最高180px
+                chartItem.innerHTML = `
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar" style="height: ${barHeight}px;">
+                            <span class="value">${item.percent}%</span>
+                        </div>
+                    </div>
+                    <div class="chart-label">${item.label}</div>
+                    <div class="chart-desc">${item.desc}</div>
+                `;
+                container.appendChild(chartItem);
+            });
+        }
+        renderChart();
+
+        // ---------- 2. 缺陷卡片数据集（确保每个场景至少2张卡片，覆盖所有标签）----------
+        const defectsList = [
+            // 城市道路
+            { scene: "road", title: "盲道被车辆/摊贩占用", desc: "共享单车、机动车随意停放，视障人士无法通行，存在严重安全隐患。", imgBg: "🚧" },
+            { scene: "road", title: "轮椅坡道过陡且无防滑", desc: "坡道坡度超过1:12，雨天湿滑无扶手，轮椅使用者易侧翻。", imgBg: "⚠️" },
+            { scene: "road", title: "人行道障碍物堆积", desc: "电线杆、垃圾箱、施工围挡占用人行道，轮椅无法通过。", imgBg: "📦" },
+            // 公共交通
+            { scene: "traffic", title: "公交站台无坡道", desc: "站台与路面高差大，轮椅无法上下，无伸缩踏板。", imgBg: "🚌" },
+            { scene: "traffic", title: "地铁无障碍电梯常关闭", desc: "无障碍电梯位置隐蔽或长期维护，轮椅使用者出行困难。", imgBg: "🚇" },
+            { scene: "traffic", title: "车厢无语音报站", desc: "视障/听障人士无法获取到站信息，容易坐过站。", imgBg: "🔊" },
+            // 商场超市
+            { scene: "mall", title: "收银台过高无低位窗口", desc: "轮椅使用者无法平视交流，结算极不方便。", imgBg: "💳" },
+            { scene: "mall", title: "货架间距狭窄", desc: "轮椅在货架间无法转弯，购物体验差。", imgBg: "🛒" },
+            { scene: "mall", title: "无盲文/语音导购", desc: "视障人士无法独立寻找商品区域。", imgBg: "🏷️" },
+            // 医院
+            { scene: "hospital", title: "电梯无低位按钮", desc: "轮椅使用者够不到高层按钮，无语音提示。", imgBg: "🏥" },
+            { scene: "hospital", title: "无障碍卫生间被占用", desc: "专用卫生间堆放杂物，扶手损坏无人修。", imgBg: "🚻" },
+            { scene: "hospital", title: "挂号窗口过高", desc: "轮椅用户无法靠近交流，需他人代办。", imgBg: "📋" },
+            // 公园景区
+            { scene: "park", title: "出入口无坡道", desc: "公园大门只有台阶，轮椅和婴儿车无法进入。", imgBg: "🌳" },
+            { scene: "park", title: "游步道不平整", desc: "路面坑洼，轮椅推行困难，存在摔倒风险。", imgBg: "🚶" },
+            { scene: "park", title: "休息座椅无扶手", desc: "老人起身困难，缺少适老化设计。", imgBg: "🪑" },
+            // 公共卫生间
+            { scene: "toilet", title: "无障碍卫生间上锁", desc: "长期锁闭或用于储物，形同虚设。", imgBg: "🔒" },
+            { scene: "toilet", title: "紧急呼叫按钮失灵", desc: "求助装置损坏，发生意外无法呼救。", imgBg: "🆘" },
+            { scene: "toilet", title: "空间狭小轮椅难转向", desc: "门内开且空间不足，轮椅无法进入。", imgBg: "🚪" },
+            // 住宅小区
+            { scene: "community", title: "单元门口无坡道", desc: "只有台阶，轮椅/婴儿车无法入户。", imgBg: "🏘️" },
+            { scene: "community", title: "夜间照明不足", desc: "小区道路昏暗，老人易摔倒。", imgBg: "💡" },
+            { scene: "community", title: "消防通道被占用", desc: "私家车堵塞通道，急救/消防车辆无法通行。", imgBg: "🚒" }
+        ];
+
+        const container = document.getElementById('defectCardsContainer');
+        const noResultMsg = document.getElementById('noResultMsg');
+
+        // 渲染卡片
+        function renderCards(filterScene = 'all', keyword = '') {
+            if (!container) return;
+            let filtered = defectsList;
+            // 场景筛选
+            if (filterScene !== 'all') {
+                filtered = filtered.filter(card => card.scene === filterScene);
+            }
+            // 关键词搜索（标题或描述）
+            if (keyword.trim() !== '') {
+                const kw = keyword.trim().toLowerCase();
+                filtered = filtered.filter(card => 
+                    card.title.toLowerCase().includes(kw) || 
+                    card.desc.toLowerCase().includes(kw)
+                );
+            }
+            // 清空容器
+            container.innerHTML = '';
+            if (filtered.length === 0) {
+                noResultMsg.style.display = 'block';
+                return;
+            }
+            noResultMsg.style.display = 'none';
+            // 生成卡片
+            filtered.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'defect-card';
+                cardDiv.setAttribute('data-scene', card.scene);
+                cardDiv.innerHTML = `
+                    <div class="card-img" style="background: #e2f0dc; display: flex; align-items: center; justify-content: center; font-size: 48px;">
+                        ${card.imgBg}
+                    </div>
+                    <div class="card-content">
+                        <span class="card-tag">${getSceneName(card.scene)}</span>
+                        <h3>${escapeHtml(card.title)}</h3>
+                        <p>${escapeHtml(card.desc)}</p>
+                        <a href="javascript:;" class="card-detail" data-title="${escapeHtml(card.title)}" data-desc="${escapeHtml(card.desc)}">查看详情 →</a>
+                    </div>
+                `;
+                container.appendChild(cardDiv);
+            });
+            // 绑定详情弹窗事件
+            document.querySelectorAll('#defectCardsContainer .card-detail').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const title = link.getAttribute('data-title');
+                    const desc = link.getAttribute('data-desc');
+                    if (window.openModal) {
+                        window.openModal(title, `<p style="line-height:1.6;">${desc}</p><p style="margin-top:12px; color:#2E7D32;">📍 建议反馈至当地住建或残联部门</p>`);
+                    } else {
+                        alert(`【${title}】\n${desc}`);
+                    }
+                });
+            });
+        }
+
+        function getSceneName(scene) {
+            const map = {
+                road: '城市道路', traffic: '公共交通', mall: '商场超市',
+                hospital: '医院', park: '公园景区', toilet: '公共卫生间',
+                community: '住宅小区'
+            };
+            return map[scene] || '其他';
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+
+        // ---------- 3. 绑定筛选与搜索按钮 ----------
+        let currentScene = 'all';
+        let currentKeyword = '';
+
+        // 筛选标签点击
+        const filterTags = document.querySelectorAll('#defectPage .filter-tag[data-scene]');
+        filterTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                filterTags.forEach(t => t.classList.remove('active'));
+                tag.classList.add('active');
+                currentScene = tag.getAttribute('data-scene');
+                renderCards(currentScene, currentKeyword);
+            });
+        });
+
+        // 搜索按钮 + 回车
+        const searchInput = document.getElementById('defectSearchInput');
+        const searchBtn = document.getElementById('defectSearchBtn');
+        function performSearch() {
+            currentKeyword = searchInput ? searchInput.value : '';
+            renderCards(currentScene, currentKeyword);
+        }
+        if (searchBtn) searchBtn.addEventListener('click', performSearch);
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') performSearch();
+            });
+            // 清空搜索框时重置（可选）
+            searchInput.addEventListener('input', function() {
+                if (this.value === '') {
+                    currentKeyword = '';
+                    renderCards(currentScene, currentKeyword);
+                }
+            });
+        }
+
+        // 初始渲染（全部场景）
+        renderCards('all', '');
+    }
+})();
+</script>
+</body>
+</html>
